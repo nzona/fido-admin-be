@@ -1,7 +1,7 @@
 package it.be.fido.admin.security.services;
 
-import it.be.fido.admin.models.User;
-import it.be.fido.admin.repository.UserRepository;
+import it.be.fido.admin.entities.UserEntity;
+import it.be.fido.admin.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,10 +17,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
+        UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User Not Found with username: " + username));
 
-        return UserDetailsImpl.build(user);
+        return UserDetailsImpl.build(userEntity);
     }
 
 }

@@ -1,4 +1,4 @@
-package it.be.fido.admin.payload.request;
+package it.be.fido.admin.auth.payload.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

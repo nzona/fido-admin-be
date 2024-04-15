@@ -1,11 +1,10 @@
-package it.be.fido.admin.models;
+package it.be.fido.admin.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.HashSet;
@@ -19,10 +18,9 @@ import java.util.Set;
         })
 @Getter
 @Setter
-@NoArgsConstructor
-public class User {
+public class UserEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @NotBlank
@@ -45,19 +43,22 @@ public class User {
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles = new HashSet<>();
+    private Set<RoleEntity> roleEntities = new HashSet<>();
 
-    public User(String username, String email, String password) {
+    public UserEntity() {
+    }
+
+    public UserEntity(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.password = password;
     }
 
-    public User(String username, String email, String password, Set<Role> role) {
+    public UserEntity(String username, String email, String password, Set<RoleEntity> roleEntity) {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.roles = role;
+        this.roleEntities = roleEntity;
     }
 
 }

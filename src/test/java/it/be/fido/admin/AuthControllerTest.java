@@ -2,11 +2,11 @@ package it.be.fido.admin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import it.be.fido.admin.models.ERole;
-import it.be.fido.admin.payload.request.LoginRequest;
-import it.be.fido.admin.payload.request.SignupRequest;
-import it.be.fido.admin.payload.response.JwtResponse;
-import it.be.fido.admin.payload.response.MessageResponse;
+import it.be.fido.admin.auth.payload.request.LoginRequest;
+import it.be.fido.admin.auth.payload.request.SignupRequest;
+import it.be.fido.admin.auth.payload.response.JwtResponse;
+import it.be.fido.admin.common.payload.response.MessageResponse;
+import it.be.fido.admin.enumerations.ERole;
 import it.be.fido.admin.utils.DbUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.Collections;
 import java.util.Set;
 
+import static it.be.fido.admin.utils.TestUtil.getMessageREsponse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -109,10 +110,6 @@ public class AuthControllerTest {
         MessageResponse messageResponseExpected = getMessageREsponse("Role must be admin, employee or user.", 400);
         assertThat(mvcResult.getResponse().getContentAsString()).isEqualToIgnoringWhitespace(
                 objectWriter.writeValueAsString(messageResponseExpected));
-    }
-
-    private MessageResponse getMessageREsponse(String message, int statusCode) {
-        return new MessageResponse(message, statusCode);
     }
 
     /*

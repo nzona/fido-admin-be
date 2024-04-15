@@ -1,4 +1,4 @@
-package it.be.fido.admin.models;
+package it.be.fido.admin.enumerations;
 
 public enum ERole {
     ROLE_USER,

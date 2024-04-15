@@ -1,4 +1,4 @@
-package it.be.fido.admin.payload.response;
+package it.be.fido.admin.auth.payload.response;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

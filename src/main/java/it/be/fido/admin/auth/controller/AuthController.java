@@ -1,17 +1,17 @@
-package it.be.fido.admin.controllers;
+package it.be.fido.admin.auth.controller;
 
-import it.be.fido.admin.exceptions.RoleNotExistsException;
-import it.be.fido.admin.models.ERole;
-import it.be.fido.admin.models.Role;
-import it.be.fido.admin.models.User;
-import it.be.fido.admin.payload.request.LoginRequest;
-import it.be.fido.admin.payload.request.SignupRequest;
-import it.be.fido.admin.payload.response.JwtResponse;
-import it.be.fido.admin.payload.response.MessageResponse;
-import it.be.fido.admin.repository.UserRepository;
+import it.be.fido.admin.auth.dto.RoleDto;
+import it.be.fido.admin.auth.dto.UserDto;
+import it.be.fido.admin.auth.mapper.AuthMapper;
+import it.be.fido.admin.auth.payload.request.LoginRequest;
+import it.be.fido.admin.auth.payload.request.SignupRequest;
+import it.be.fido.admin.auth.payload.response.JwtResponse;
+import it.be.fido.admin.common.payload.response.MessageResponse;
+import it.be.fido.admin.enumerations.ERole;
 import it.be.fido.admin.security.jwt.JwtUtils;
 import it.be.fido.admin.security.services.UserDetailsImpl;
 import it.be.fido.admin.services.RoleService;
+import it.be.fido.admin.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,16 +36,19 @@ public class AuthController {
     AuthenticationManager authenticationManager;
 
     @Autowired
-    UserRepository userRepository;
+    RoleService roleService;
 
     @Autowired
-    RoleService roleService;
+    UserService userService;
 
     @Autowired
     PasswordEncoder encoder;
 
     @Autowired
     JwtUtils jwtUtils;
+
+    @Autowired
+    AuthMapper authMapper;
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -70,61 +73,60 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) throws RoleNotExistsException {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         // rotta usata per la registrazione di un utente
         //vengono effettuati controlli sull'esistenza di username e email e poi dell'esistenza o meno del ruolo.
         //viene ritornato un semplice messaggio di avvenuta registrazione dello user
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+        if (userService.isExistentUsername(signUpRequest.getUsername())) {
             return ResponseEntity
                     .badRequest()
                     .body(new MessageResponse("Error: Username is already taken!", HttpStatus.BAD_REQUEST.value()));
         }
 
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+        if (userService.isExistentEmail(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
                     .body(new MessageResponse("Error: Email is already in use!", HttpStatus.BAD_REQUEST.value()));
         }
 
+        Set<RoleDto> roleDtos = getRoles(signUpRequest);
         // Create new user's account
-        User user = new User(signUpRequest.getUsername(),
+        UserDto userDto = authMapper.createUserDto(signUpRequest.getUsername(),
                 signUpRequest.getEmail(),
-                encoder.encode(signUpRequest.getPassword()));
+                encoder.encode(signUpRequest.getPassword()),
+                roleDtos);
 
-        Set<Role> roles = getRoles(signUpRequest);
-
-        user.setRoles(roles);
-        userRepository.save(user);
+        userService.saveUser(userDto);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!", HttpStatus.OK.value()));
     }
 
-    private Set<Role> getRoles(SignupRequest signUpRequest) throws RoleNotExistsException {
+    private Set<RoleDto> getRoles(SignupRequest signUpRequest) {
         Set<String> strRoles = signUpRequest.getRole();
         if (!strRoles.contains("admin") && !strRoles.contains("employee") && !strRoles.contains("user")) {
-            throw new RoleNotExistsException("Role must be admin, employee or user.");
+            throw new IllegalArgumentException("Role must be admin, employee or user.");
         }
-        Set<Role> roles = new HashSet<>();
+        Set<RoleDto> roleDtos = new HashSet<>();
 
         strRoles.forEach(role -> {
             switch (role) {
                 case "admin":
-                    Role adminRole = roleService.getRoleByName(ERole.ROLE_ADMIN).get();
-                    roles.add(adminRole);
+                    RoleDto adminRole = roleService.getRoleByName(ERole.ROLE_ADMIN);
+                    roleDtos.add(adminRole);
 
                     break;
                 case "employee":
-                    Role modRole = roleService.getRoleByName(ERole.ROLE_EMPLOYEE).get();
-                    roles.add(modRole);
+                    RoleDto employeeRole = roleService.getRoleByName(ERole.ROLE_EMPLOYEE);
+                    roleDtos.add(employeeRole);
 
                     break;
                 case "user":
-                    Role userRole = roleService.getRoleByName(ERole.ROLE_USER).get();
-                    roles.add(userRole);
+                    RoleDto userRole = roleService.getRoleByName(ERole.ROLE_USER);
+                    roleDtos.add(userRole);
 
                     break;
             }
         });
-        return roles;
+        return roleDtos;
     }
 }
