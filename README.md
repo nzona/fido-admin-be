@@ -1,3 +1,3 @@
-# fido-admin
+# izidog
 
-sezione be dell'applicazione fido-admin
+sezione be dell'applicazione izidog
